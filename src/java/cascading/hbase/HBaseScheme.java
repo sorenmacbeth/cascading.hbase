@@ -31,6 +31,8 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.DataOutputBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -199,6 +201,7 @@ public class HBaseScheme extends Scheme
     byte[] keyBytes = Bytes.toBytes( key.getString( 0 ) );
     Put put = new Put( keyBytes );
 
+    DataOutputBuffer wBuffer = new DataOutputBuffer();
     for( int i = 0; i < valueFields.length; i++ )
       {
       Fields fieldSelector = valueFields[ i ];
@@ -208,13 +211,30 @@ public class HBaseScheme extends Scheme
         {
         Fields fields = values.getFields();
         Tuple tuple = values.getTuple();
+
+        Comparable c = tuple.get(j);
+        byte [] hvalue; // what we will write to hbase
+        if ( c instanceof Writable)
+          {
+          Writable w = (Writable) c;
+          wBuffer.reset();
+          w.write(wBuffer);
+          hvalue = new byte[wBuffer.getLength()];
+          System.arraycopy(wBuffer.getData(), 0,
+              hvalue, 0, wBuffer.getLength());
+          }
+        else
+          {
+          hvalue = Bytes.toBytes( tuple.getString( j ) );
+          }
+
         if( familyNames == null )
           {
           byte[][] column = KeyValue.parseColumn(Bytes.toBytes(fields.get( j ).toString()));
-          put.add(column[0], column.length == 1 ? null : column[1] , Bytes.toBytes( tuple.getString( j ) ) );
+          put.add(column[0], column.length == 1 ? null : column[1] , hvalue );
           }
         else {
-          put.add( Bytes.toBytes(Bytes.toString(familyNames[ i ])) , Bytes.toBytes(fields.get( j ).toString()), Bytes.toBytes( tuple.getString( j ) ) );
+          put.add( Bytes.toBytes(Bytes.toString(familyNames[ i ])) , Bytes.toBytes(fields.get( j ).toString()), hvalue );
         }
       }
 
