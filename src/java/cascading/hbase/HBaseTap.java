@@ -123,9 +123,9 @@ public class HBaseTap extends Tap
 
     HTableDescriptor tableDescriptor = new HTableDescriptor( tableName );
 
-    String[] familyNames = ( (HBaseScheme) getScheme() ).getFamilyNames();
+    byte[][] familyNames = ( (HBaseScheme) getScheme() ).getFamilyNames();
 
-    for( String familyName : familyNames )
+    for( byte[] familyName : familyNames )
       tableDescriptor.addFamily( new HColumnDescriptor( familyName ) );
 
     hBaseAdmin.createTable( tableDescriptor );

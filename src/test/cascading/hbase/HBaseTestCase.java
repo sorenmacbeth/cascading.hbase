@@ -26,10 +26,8 @@ import java.io.IOException;
 import cascading.flow.Flow;
 import cascading.tuple.TupleEntryIterator;
 import org.apache.hadoop.hbase.HBaseClusterTestCase;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.Scanner;
-import org.apache.hadoop.hbase.io.BatchUpdate;
-import org.apache.hadoop.hbase.io.RowResult;
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 
 /**
@@ -66,11 +64,11 @@ public class HBaseTestCase extends HBaseClusterTestCase
     for( int i = 0; i < size; i++ )
       {
       byte[] bytes = Bytes.toBytes( Integer.toString( i ) );
-      BatchUpdate batchUpdate = new BatchUpdate( bytes );
+      Put put = new Put( bytes );
 
-      batchUpdate.put( charCol, bytes );
+      put.add(KeyValue.parseColumn(Bytes.toBytes(charCol))[0], KeyValue.parseColumn(Bytes.toBytes(charCol))[1] , bytes );
 
-      table.commit( batchUpdate );
+      table.put( put );
       }
 
     table.close();
@@ -81,16 +79,18 @@ public class HBaseTestCase extends HBaseClusterTestCase
     byte[][] columns = Bytes.toByteArrays( new String[]{charCol} );
 
     HTable table = new HTable( conf, tableName );
-    Scanner scanner = table.getScanner( columns );
-
+    Scan scanner = new Scan();
+    scanner.addColumns(columns);
+    ResultScanner rs = table.getScanner(scanner);
     int count = 0;
-    for( RowResult rowResult : scanner )
+    for( Result rowResult : rs )
       {
       count++;
-      System.out.println( "rowResult = " + rowResult.get( charCol ) );
+      byte[][] bytes = KeyValue.parseColumn( Bytes.toBytes(charCol ) );
+      System.out.println( "rowResult = " + rowResult.getValue(bytes[0], bytes[1] ) );
       }
 
-    scanner.close();
+    rs.close();
 
     assertEquals( "wrong number of rows", expected, count );
     }

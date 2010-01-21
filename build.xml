@@ -92,6 +92,10 @@
       <include name="*.jar"/>
     </fileset>
 
+    <fileset dir="${hbase.home}/lib">
+      <include name="*.jar"/>
+    </fileset>
+
     <fileset dir="${hbase.home}/build" erroronmissingdir="false">
       <include name="*.jar"/>
     </fileset>
