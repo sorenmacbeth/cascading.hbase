@@ -19,7 +19,7 @@ Welcome
 
 Building
 
- This release requires at least Cascading 1.0.1. Hadoop 0.19.x,
+ This release requires at least Cascading 1.0.1. Hadoop 0.20.x,
  and the related HBase release.
 
  To build a jar,
