@@ -49,6 +49,7 @@ public class HBaseScheme extends Scheme
   private Fields keyField;
   /** String familyNames */
   private byte[][] familyNames;
+  private String[] familyNamesStr;
   /** Field valueFields */
   private Fields[] valueFields;
 
@@ -82,7 +83,10 @@ public class HBaseScheme extends Scheme
     this.keyField = keyFields;
     //The column Names only holds the family Names.
     if(familyNames != null)
+      {
       this.familyNames = Bytes.toByteArrays(familyNames);
+      this.familyNamesStr = familyNames;
+      }
     this.valueFields = valueFields;
 
     setSourceSink( this.keyField, this.valueFields );
@@ -305,8 +309,10 @@ public class HBaseScheme extends Scheme
 
     HBaseScheme that = (HBaseScheme) object;
 
-    if( !Arrays.equals( familyNames, that.familyNames ) )
+    if( !Arrays.equals( familyNamesStr, that.familyNamesStr ) ) {
+      LOG.info("ALLO");
       return false;
+    }
     if( keyField != null ? !keyField.equals( that.keyField ) : that.keyField != null )
       return false;
     if( !Arrays.equals( valueFields, that.valueFields ) )
@@ -320,7 +326,7 @@ public class HBaseScheme extends Scheme
     {
     int result = super.hashCode();
     result = 31 * result + ( keyField != null ? keyField.hashCode() : 0 );
-    result = 31 * result + ( familyNames != null ? Arrays.hashCode( familyNames ) : 0 );
+    result = 31 * result + ( familyNamesStr != null ? Arrays.hashCode( familyNamesStr ) : 0 );
     result = 31 * result + ( valueFields != null ? Arrays.hashCode( valueFields ) : 0 );
     return result;
     }
