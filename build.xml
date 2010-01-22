@@ -18,12 +18,17 @@
   <!--<property file="${user.home}/${name}.build.properties" />-->
   <property file="build.properties"/>
 
+  <property file="${basedir}/version.properties"/>
+
+  <property name="cascading.hbase.version" value="x.y.z"/>
+
   <!-- these are optional, only used if you uncomment the project.class.path filesets below -->
   <property name="hadoop.home" location="${basedir}/../hadoop"/>
   <property name="hadoop.lib" location="${hadoop.home}/lib"/>
 
   <property name="hbase.home" location="${basedir}/../hbase"/>
   <property name="hbase.lib" location="${hbase.home}/lib"/>
+  <property name="hbase.conf.test" location="${hbase.home}/src/test/"/>
 
   <!-- assumes Cascading shares the same parent directory, change if necessary -->
   <property name="cascading.home" location="${basedir}/../cascading"/>
@@ -59,6 +64,8 @@
 
   <property name="test.results" location="${build.dir}/results"/>
 
+  <property name="javac.debug" value="true"/>
+
   <property name="dist" location="dist"/>
 
   <path id="project.class.path">
@@ -87,6 +94,9 @@
     <fileset dir="${hadoop.lib}">
       <include name="**/*.jar"/>
     </fileset>
+
+    <!-- using test config files so unit tests pass -->
+    <pathelement location="${hbase.conf.test}"/>
 
     <fileset dir="${hbase.home}">
       <include name="*.jar"/>
@@ -123,7 +133,7 @@
     <mkdir dir="${build.test}"/>
     <mkdir dir="${lib.dir}"/>
 
-    <javac srcdir="${src.dir}" destdir="${build.classes}" verbose="off">
+    <javac srcdir="${src.dir}" destdir="${build.classes}" verbose="off" debug="${javac.debug}">
       <classpath refid="project.class.path"/>
     </javac>
 
@@ -133,7 +143,7 @@
       </fileset>
     </copy>
 
-    <javac srcdir="${src.test}" destdir="${build.test}" verbose="off">
+    <javac srcdir="${src.test}" destdir="${build.test}" verbose="off" debug="${javac.debug}">
       <classpath refid="project.class.path"/>
     </javac>
 
@@ -147,7 +157,7 @@
 
   <target name="jar" depends="build" description="creates module jar">
 
-    <jar jarfile="${build.dir}/${ant.project.name}.jar">
+    <jar jarfile="${build.dir}/${ant.project.name}-${cascading.hbase.version}.jar">
       <fileset dir="${build.classes}"/>
     </jar>
 

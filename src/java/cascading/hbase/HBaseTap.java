@@ -13,12 +13,9 @@
 package cascading.hbase;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import cascading.tap.SinkMode;
 import cascading.tap.Tap;
-import cascading.tap.TapException;
 import cascading.tap.hadoop.TapCollector;
 import cascading.tap.hadoop.TapIterator;
 import cascading.tuple.TupleEntryCollector;
@@ -50,6 +47,9 @@ public class HBaseTap extends Tap
   /** Field hBaseAdmin */
   private transient HBaseAdmin hBaseAdmin;
 
+  /** Field hostName */
+  private String quorumNames = "localhost";
+  /** Field tableName */
   private String tableName;
 
   /**
@@ -77,21 +77,46 @@ public class HBaseTap extends Tap
     this.tableName = tableName;
     }
 
-  private URI getURI()
+  /**
+   * Constructor HBaseTap creates a new HBaseTap instance.
+   *
+   * @param tableName       of type String
+   * @param HBaseFullScheme of type HBaseFullScheme
+   */
+  public HBaseTap( String quorumNames, String tableName, HBaseScheme HBaseFullScheme )
     {
-    try
-      {
-      return new URI( SCHEME, tableName, null );
-      }
-    catch( URISyntaxException exception )
-      {
-      throw new TapException( "unable to create uri", exception );
-      }
+    super( HBaseFullScheme, SinkMode.APPEND );
+    this.quorumNames = quorumNames;
+    this.tableName = tableName;
+    }
+
+  /**
+   * Constructor HBaseTap creates a new HBaseTap instance.
+   *
+   * @param tableName       of type String
+   * @param HBaseFullScheme of type HBaseFullScheme
+   * @param sinkMode        of type SinkMode
+   */
+  public HBaseTap( String quorumNames, String tableName, HBaseScheme HBaseFullScheme, SinkMode sinkMode )
+    {
+    super( HBaseFullScheme, sinkMode );
+    this.quorumNames = quorumNames;
+    this.tableName = tableName;
+    }
+
+  /**
+   * Method getTableName returns the tableName of this HBaseTap object.
+   *
+   * @return the tableName (type String) of this HBaseTap object.
+   */
+  public String getTableName()
+    {
+    return tableName;
     }
 
   public Path getPath()
     {
-    return new Path( getURI().toString() );
+    return new Path( SCHEME + ":/" + tableName.replaceAll( ":", "_" ) );
     }
 
   public TupleEntryIterator openForRead( JobConf conf ) throws IOException
@@ -104,17 +129,23 @@ public class HBaseTap extends Tap
     return new TapCollector( this, conf );
     }
 
-  private HBaseAdmin getHBaseAdmin() throws MasterNotRunningException
+  private HBaseAdmin getHBaseAdmin( JobConf conf ) throws MasterNotRunningException
     {
     if( hBaseAdmin == null )
-      hBaseAdmin = new HBaseAdmin( new HBaseConfiguration() );
+      {
+      conf = conf == null ? new JobConf() : new JobConf( conf );
+
+      conf.set( "hbase.zookeeper.quorum", quorumNames );
+
+      hBaseAdmin = new HBaseAdmin( new HBaseConfiguration( conf ) );
+      }
 
     return hBaseAdmin;
     }
 
   public boolean makeDirs( JobConf conf ) throws IOException
     {
-    HBaseAdmin hBaseAdmin = getHBaseAdmin();
+    HBaseAdmin hBaseAdmin = getHBaseAdmin( conf );
 
     if( hBaseAdmin.tableExists( tableName ) )
       return true;
@@ -136,7 +167,7 @@ public class HBaseTap extends Tap
   public boolean deletePath( JobConf conf ) throws IOException
     {
     // eventually keep table meta-data to source table create
-    HBaseAdmin hBaseAdmin = getHBaseAdmin();
+    HBaseAdmin hBaseAdmin = getHBaseAdmin( conf );
 
     if( !hBaseAdmin.tableExists( tableName ) )
       return true;
@@ -151,7 +182,7 @@ public class HBaseTap extends Tap
 
   public boolean pathExists( JobConf conf ) throws IOException
     {
-    return getHBaseAdmin().tableExists( tableName );
+    return getHBaseAdmin( conf ).tableExists( tableName );
     }
 
   public long getPathModified( JobConf conf ) throws IOException
@@ -162,6 +193,8 @@ public class HBaseTap extends Tap
   @Override
   public void sinkInit( JobConf conf ) throws IOException
     {
+    conf.set( "hbase.zookeeper.quorum", quorumNames );
+
     LOG.debug( "sinking to table: {}", tableName );
 
     // do not delete if initialized from within a task
@@ -177,9 +210,37 @@ public class HBaseTap extends Tap
   @Override
   public void sourceInit( JobConf conf ) throws IOException
     {
+    conf.set( "hbase.zookeeper.quorum", quorumNames );
+
     LOG.debug( "sourcing from table: {}", tableName );
 
     FileInputFormat.addInputPaths( conf, tableName );
     super.sourceInit( conf );
+    }
+
+  @Override
+  public boolean equals( Object object )
+    {
+    if( this == object )
+      return true;
+    if( object == null || getClass() != object.getClass() )
+      return false;
+    if( !super.equals( object ) )
+      return false;
+
+    HBaseTap hBaseTap = (HBaseTap) object;
+
+    if( tableName != null ? !tableName.equals( hBaseTap.tableName ) : hBaseTap.tableName != null )
+      return false;
+
+    return true;
+    }
+
+  @Override
+  public int hashCode()
+    {
+    int result = super.hashCode();
+    result = 31 * result + ( tableName != null ? tableName.hashCode() : 0 );
+    return result;
     }
   }
