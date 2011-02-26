@@ -116,7 +116,7 @@ public class HBaseTap extends Tap
 
   public Path getPath()
     {
-    return new Path( SCHEME + ":/" + tableName.replaceAll( ":", "_" ) );
+	return null;
     }
 
   public TupleEntryIterator openForRead( JobConf conf ) throws IOException
