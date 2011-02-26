@@ -180,7 +180,7 @@ public class HBaseScheme extends Scheme
       {
       byte[][] col = KeyValue.parseColumn(fieldName);
       byte[] cell = row.getValue( col[0], col.length == 1 ? null : col[1]);
-      result.add( cell != null ? Bytes.toString( cell ) : "" );
+      result.add( cell != null ? new ByteHolder(cell) : "" );
       }
 
     return result;
