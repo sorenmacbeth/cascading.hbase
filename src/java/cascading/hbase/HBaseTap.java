@@ -49,7 +49,7 @@ public class HBaseTap extends Tap
   private transient HBaseAdmin hBaseAdmin;
 
   /** Field hostName */
-  private String quorumNames = "localhost";
+      private String quorumNames = null;
   /** Field tableName */
   private String tableName;
 
@@ -135,7 +135,7 @@ public class HBaseTap extends Tap
     if( hBaseAdmin == null )
       {
       conf = conf == null ? new JobConf() : new JobConf( conf );
-
+      if (quorumNames != null)
       conf.set( "hbase.zookeeper.quorum", quorumNames );
 
       hBaseAdmin = new HBaseAdmin( new HBaseConfiguration( conf ) );
@@ -194,6 +194,7 @@ public class HBaseTap extends Tap
   @Override
   public void sinkInit( JobConf conf ) throws IOException
     {
+      if (quorumNames != null)
     conf.set( "hbase.zookeeper.quorum", quorumNames );
 
     LOG.debug( "sinking to table: {}", tableName );
@@ -211,6 +212,7 @@ public class HBaseTap extends Tap
   @Override
   public void sourceInit( JobConf conf ) throws IOException
     {
+      if (quorumNames != null)
     conf.set( "hbase.zookeeper.quorum", quorumNames );
 
     LOG.debug( "sourcing from table: {}", tableName );
