@@ -25,6 +25,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.MasterNotRunningException;
+import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.mapred.TableOutputFormat;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -129,7 +130,7 @@ public class HBaseTap extends Tap
     return new TapCollector( this, conf );
     }
 
-  private HBaseAdmin getHBaseAdmin( JobConf conf ) throws MasterNotRunningException
+      private HBaseAdmin getHBaseAdmin( JobConf conf ) throws MasterNotRunningException, ZooKeeperConnectionException
     {
     if( hBaseAdmin == null )
       {
