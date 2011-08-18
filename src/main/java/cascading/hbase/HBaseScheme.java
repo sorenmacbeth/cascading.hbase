@@ -85,34 +85,6 @@ public class HBaseScheme extends Scheme {
 		validate();
 	}
 
-	/**
-	 * Constructor HBaseScheme creates a new HBaseScheme instance using fully qualified column names
-	 *
-	 * @param keyField    of type String
-	 * @param valueFields of type Fields
-	 */
-	public HBaseScheme(Fields keyField, Fields valueFields) {
-		this(keyField, Fields.fields(valueFields));
-	}
-
-	/**
-	 * Constructor HBaseScheme creates a new HBaseScheme instance using fully qualified column names
-	 *
-	 * @param keyField    of type Field
-	 * @param valueFields of type Field[]
-	 */
-	public HBaseScheme(Fields keyField, Fields[] valueFields) {
-		//Set a flag that this is using fully qualified names
-		this.isFullyQualified = true;
-		this.keyField = keyField;
-		this.valueFields = valueFields;
-
-		validate();
-
-		setSourceSink(this.keyField, this.valueFields);
-
-	}
-
 	private void validate() {
 		if (keyField.size() != 1)
 			throw new IllegalArgumentException("may only have one key field, found: " + keyField.print());

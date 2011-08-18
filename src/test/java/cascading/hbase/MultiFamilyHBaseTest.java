@@ -35,7 +35,7 @@ public class MultiFamilyHBaseTest extends HBaseTestCase
   {
   transient private static Map<Object, Object> properties = new HashMap<Object, Object>();
 
-  String inputFile = "src/test/data/small.txt";
+  String inputFile = "src/test/resources/data/small.txt";
 
   public MultiFamilyHBaseTest()
     {
