@@ -82,7 +82,7 @@ public class MultiFamilyCascadeHBaseTest extends HBaseTestCase
 
     cascade.complete();
 
-    verify( "multitable", "left", "lower", 13 );
+    verify( "multitable", "left:lower", 13 );
 
     verifySink( parseFlow, 13 );
     verifySink( copyFlow, 13 );
@@ -94,7 +94,7 @@ public class MultiFamilyCascadeHBaseTest extends HBaseTestCase
 
     cascade.complete();
 
-    verify( "multitable", "left", "lower", 26 );
+    verify( "multitable", "left:lower", 26 );
 
     verifySink( parseFlow, 26 );
     verifySink( copyFlow, 26 );
