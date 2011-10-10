@@ -15,14 +15,19 @@ package cascading.hbase;
 import java.io.IOException;
 import java.util.HashSet;
 
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapred.TableInputFormat;
 import org.apache.hadoop.hbase.mapred.TableOutputFormat;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.io.DataOutputBuffer;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.mapreduce.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,7 +115,8 @@ public class HBaseScheme extends Scheme {
 		return familyNameSet.toArray(new String[0]);
 	}
 
-	public Tuple source(Object key, Object value) {
+	@Override
+    public Tuple source(Object key, Object value) {
 		Tuple result = new Tuple();
 
 		ImmutableBytesWritable keyWritable = (ImmutableBytesWritable) key;
@@ -140,7 +146,9 @@ public class HBaseScheme extends Scheme {
 		return fields;
 	}
 
-	public void sink(TupleEntry tupleEntry, OutputCollector outputCollector) throws IOException {
+	@SuppressWarnings("unchecked")
+    @Override
+    public void sink(TupleEntry tupleEntry, @SuppressWarnings("rawtypes") OutputCollector outputCollector) throws IOException {
 		Tuple key = tupleEntry.selectTuple(keyField);
 
 		byte[] keyBytes = Bytes.toBytes(key.getString(0));
@@ -150,11 +158,32 @@ public class HBaseScheme extends Scheme {
 			Fields fieldSelector = valueFields[i];
 			TupleEntry values = tupleEntry.selectEntry(fieldSelector);
 
+			DataOutputBuffer dataOutputBuffer = new DataOutputBuffer();
+			
 			for (int j = 0; j < values.getFields().size(); j++) {
 				Fields fields = values.getFields();
 				Tuple tuple = values.getTuple();
+				
+				Object object = tuple.getObject(j);
+		        byte[] objectInBytes;
+		        
+		        if (object instanceof Writable)	{
+		        	Writable writable = (Writable)object;
+		        	dataOutputBuffer.reset();
+		        	writable.write(dataOutputBuffer);
+		        	objectInBytes = new byte[dataOutputBuffer.getLength()];
+		        	System.arraycopy(dataOutputBuffer.getData(), 0,
+		        			objectInBytes, 0, dataOutputBuffer.getLength());
+		        } else	{
+		        	objectInBytes = Bytes.toBytes(tuple.toString());
+		        }
+		        
+		        if (null == objectInBytes)	{
+		        	objectInBytes = HConstants.EMPTY_BYTE_ARRAY;
+		        }
+				
 				put.add(Bytes.toBytes(familyNames[i]), Bytes.toBytes(fields.get(j).toString()),
-						Bytes.toBytes(tuple.getString(j)));
+						objectInBytes);
 			}
 		}
 
@@ -162,18 +191,21 @@ public class HBaseScheme extends Scheme {
 	}
 
 	public void sinkInit(Tap tap, JobConf conf) throws IOException {
+		//conf.setOutputFormatClass(TableOutputFormat.class);
 		conf.setOutputFormat(TableOutputFormat.class);
-
+		
 		conf.setOutputKeyClass(ImmutableBytesWritable.class);
 		conf.setOutputValueClass(Put.class);
 	}
 
 	public void sourceInit(Tap tap, JobConf conf) throws IOException {
+		//conf.setInputFormatClass(TableInputFormat.class);
 		conf.setInputFormat(TableInputFormat.class);
 
 		String columns = getColumns();
 		LOG.debug("sourcing from columns: {}", columns);
 
+		//conf.getConfiguration().set(TableInputFormat.SCAN_COLUMNS, columns);
 		conf.set(TableInputFormat.COLUMN_LIST, columns);
 	}
 

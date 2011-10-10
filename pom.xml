@@ -20,6 +20,15 @@
 			<name>Java.net Repository for Maven</name>
 			<url>http://download.java.net/maven/2/</url>
 		</repository>
+		<repository>
+			<id>cloudera-thrift</id>
+			<url>https://repository.cloudera.com/artifactory/temp-thrift-cache</url>
+		</repository>
+		<repository>
+			<id>cloudera-librel</id>
+			<url>https://repository.cloudera.com/artifactory/lib-release-local</url>
+		</repository>
+		
 	</repositories>
 	<build>
 		<pluginManagement>
@@ -62,6 +71,22 @@
 			<groupId>org.apache.hbase</groupId>
 			<artifactId>hbase</artifactId>
 			<version>0.90.3</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.hbase</groupId>
+		    <artifactId>hbase</artifactId>
+		    <version>0.90.3-cdh3u1</version>
+		    <classifier>tests</classifier>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.thrift</groupId>
+		    <artifactId>thrift</artifactId>
+		    <version>0.2.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.cloudera.hadoop</groupId>
+		    <artifactId>hadoop-test</artifactId>
+		    <version>0.20.2-737</version>
 		</dependency>
 	</dependencies>
 </project>
