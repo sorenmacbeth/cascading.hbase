@@ -65,7 +65,7 @@ public class HBaseTap extends Tap {
 	 * @param tableName       of type String
 	 * @param HBaseFullScheme of type HBaseFullScheme
 	 */
-	public HBaseTap(String tableName, HBaseScheme HBaseFullScheme) {
+	public HBaseTap(String tableName, HBaseGenScheme HBaseFullScheme) {
 		super(HBaseFullScheme, SinkMode.APPEND);
 		this.tableName = tableName;
 	}
@@ -77,7 +77,7 @@ public class HBaseTap extends Tap {
 	 * @param HBaseFullScheme of type HBaseFullScheme
 	 * @param sinkMode        of type SinkMode
 	 */
-	public HBaseTap(String tableName, HBaseScheme HBaseFullScheme, SinkMode sinkMode) {
+	public HBaseTap(String tableName, HBaseGenScheme HBaseFullScheme, SinkMode sinkMode) {
 		super(HBaseFullScheme, sinkMode);
 		this.tableName = tableName;
 	}
@@ -181,7 +181,7 @@ public class HBaseTap extends Tap {
 
 	public boolean makeDirs(JobConf conf) throws IOException {
 		
-		openTable(tableName, ((HBaseScheme) getScheme()).getFamilyNames());
+		openTable(tableName, ((HBaseGenScheme) getScheme()).getFamilyNames());
 		return true;
 	}
 

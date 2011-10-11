@@ -53,20 +53,20 @@
 		<dependency>
 			<groupId>cascading</groupId>
 			<artifactId>cascading-core</artifactId>
-			<version>1.2.0</version>
+			<version>1.2.4</version>
 		</dependency>
 		<dependency>
 			<groupId>cascading</groupId>
 			<artifactId>cascading-test</artifactId>
-			<version>1.2.0</version>
+			<version>1.2.4</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
+		<!--dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-core</artifactId>
 			<version>0.20.2</version>
 			<scope>provided</scope>
-		</dependency>
+		</dependency-->
 		<dependency>
 			<groupId>org.apache.hbase</groupId>
 			<artifactId>hbase</artifactId>
@@ -87,6 +87,22 @@
 		    <groupId>com.cloudera.hadoop</groupId>
 		    <artifactId>hadoop-test</artifactId>
 		    <version>0.20.2-737</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.hadoop</groupId>
+		    <artifactId>hadoop-core</artifactId>
+		    <version>0.20.2-cdh3u1</version>
+		    <type>pom</type>
+		</dependency>
+		<dependency>
+		    <groupId>junit</groupId>
+		    <artifactId>junit</artifactId>
+		    <version>4.9</version>
+		</dependency>
+		<dependency>
+		    <groupId>junit-addons</groupId>
+		    <artifactId>junit-addons</artifactId>
+		    <version>1.4</version>
 		</dependency>
 	</dependencies>
 </project>

@@ -44,7 +44,7 @@ import cascading.util.Util;
  *
  * @see HBaseTap
  */
-public class HBaseScheme extends Scheme {
+public class HBaseScheme extends HBaseGenScheme {
 	/** Field LOG */
 	private static final Logger LOG = LoggerFactory.getLogger(HBaseScheme.class);
 
