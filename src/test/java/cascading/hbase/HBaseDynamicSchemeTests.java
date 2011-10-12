@@ -154,8 +154,7 @@ public class HBaseDynamicSchemeTests
 		
 		Pipe pipe = new Pipe("hbasedynamicschemepipe");
 		
-		pipe = new Each(pipe, new Fields("row", "value"), new HBaseMapToTuples<String, String, String>(new Fields("row", "cf", "column", "value"), new Fields ("row", "value"), 
-				String.class, String.class, String.class));
+		pipe = new Each(pipe, new Fields("row", "value"), new HBaseMapToTuples(new Fields("row", "cf", "column", "value"), new Fields ("row", "value")));
 		pipe = new Each(pipe, new StringAppender(new Fields("line")));
 		
 		Flow flow = new FlowConnector(new Properties()).connect(source, sink, pipe);
@@ -199,8 +198,8 @@ public class HBaseDynamicSchemeTests
 	    parsePipe = new Each(parsePipe, new Insert(new Fields("cf"), "cf"), Fields.ALL);
 	    parsePipe = new GroupBy(parsePipe, new Fields("num"));
 	    //parsePipe = new Every( parsePipe, new AggregatorWriterTuplesList( new Fields("key", "value"), "cf", new Fields("num"), new Fields("lower"), new Fields("upper") ) ) ;
-	    parsePipe = new Every( parsePipe, new HBaseTuplesToMap<String, String, String>( new Fields("key", "value"), new Fields("cf"), new Fields("num"), 
-	    		new Fields("lower"), new Fields("upper"), String.class, String.class, String.class ) ) ;
+	    parsePipe = new Every( parsePipe, new HBaseTuplesToMap( new Fields("key", "value"), new Fields("cf"), new Fields("num"), 
+	    		new Fields("lower"), new Fields("upper")) ) ;
 
 	    Tap hBaseTap = new HBaseTap( "multitable", new HBaseDynamicScheme( new Fields("key"), new Fields("value"), "cf" ), SinkMode.REPLACE );
 	    
