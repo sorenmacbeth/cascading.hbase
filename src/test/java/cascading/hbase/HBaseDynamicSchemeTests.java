@@ -1,26 +1,18 @@
 package cascading.hbase;
 
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Properties;
-import java.util.TreeMap;
-
-import javax.swing.text.Keymap;
 
 import junitx.framework.FileAssert;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseClusterTestCase;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.LocalHBaseCluster;
-import org.apache.hadoop.hbase.MasterNotRunningException;
-import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
@@ -31,16 +23,16 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import cascading.flow.Flow;
 import cascading.flow.FlowConnector;
 import cascading.flow.FlowProcess;
-import cascading.operation.Aggregator;
-import cascading.operation.AggregatorCall;
+import cascading.hbase.helper.HBaseMapToTuples;
+import cascading.hbase.helper.HBaseTuplesToMap;
 import cascading.operation.BaseOperation;
 import cascading.operation.Function;
 import cascading.operation.FunctionCall;
+import cascading.operation.Insert;
 import cascading.operation.regex.RegexSplitter;
 import cascading.pipe.Each;
 import cascading.pipe.Every;
@@ -72,9 +64,6 @@ public class HBaseDynamicSchemeTests
 	
 	private static final String inputDataFile = "src/test/resources/data/small.txt";
 	
-	private HTable table;
-
-
 	
 	@BeforeClass
 	public static void before() throws IOException, InterruptedException
@@ -128,37 +117,6 @@ public class HBaseDynamicSchemeTests
 	  }
 	
 	@SuppressWarnings("serial")
-    static public class FunctionTuplesList 
-	extends BaseOperation<Void > implements Function<Void>	{
-		
-		Fields inputFields;
-		
-		public FunctionTuplesList(Fields declaredFields, Fields inputFields)	{
-			super(2, declaredFields);
-			
-			this.inputFields = inputFields;
-		}
-
-		@Override
-        public void operate(FlowProcess flowProcess, FunctionCall<Void> functionCall)
-        {
-	        String row = functionCall.getArguments().getString(inputFields.get(0));
-	        @SuppressWarnings("unchecked")
-            NavigableMap<byte[], NavigableMap<byte[], byte[]>> keyValueMaps = 
-	        		(NavigableMap<byte[], NavigableMap<byte[], byte[]>>) 
-         functionCall.getArguments().getObject(inputFields.get(1));
-	        
-	        for (Entry<byte[], NavigableMap<byte[], byte[]>>  keyValue : keyValueMaps.entrySet())	{
-				for (Entry<byte[], byte[]>  value: keyValue.getValue().entrySet())	{
-					functionCall.getOutputCollector().add(new Tuple(row, Bytes.toString(keyValue.getKey()),
-							Bytes.toString(value.getKey()), Bytes.toString(value.getValue())));
-				}
-			}
-        }
-		
-	}
-	
-	@SuppressWarnings("serial")
     static public class StringAppender 
 	extends BaseOperation<Void > implements Function<Void>	{
 			
@@ -189,14 +147,15 @@ public class HBaseDynamicSchemeTests
 	}
 	
 	@Test
-	public void testRead() {
+	public void testRead() throws SecurityException, NoSuchMethodException {
 		
 		Tap source = new HBaseTap(TEST_TABLE, new HBaseDynamicScheme(new Fields("row"), new Fields("value"), TEST_CF));
 		Tap sink = new Lfs(new TextLine(new Fields("line")), "build/test/hbasedynamicread", SinkMode.REPLACE);
 		
 		Pipe pipe = new Pipe("hbasedynamicschemepipe");
 		
-		pipe = new Each(pipe, new Fields("row", "value"), new FunctionTuplesList(new Fields("row", "cf", "column", "value"), new Fields ("row", "value")));
+		pipe = new Each(pipe, new Fields("row", "value"), new HBaseMapToTuples<String, String, String>(new Fields("row", "cf", "column", "value"), new Fields ("row", "value"), 
+				String.class, String.class, String.class));
 		pipe = new Each(pipe, new StringAppender(new Fields("line")));
 		
 		Flow flow = new FlowConnector(new Properties()).connect(source, sink, pipe);
@@ -204,75 +163,6 @@ public class HBaseDynamicSchemeTests
 		flow.complete();
 		
 		FileAssert.assertBinaryEquals(new File("src/test/resources/data/fileDynamicExpected"), new File("build/test/hbasedynamicread/part-00000"));
-		
-	}
-	
-	@SuppressWarnings("serial")
-    static public class AggregatorWriterTuplesList 
-	extends BaseOperation<AggregatorWriterTuplesList.AggregatorWriterTuplesListContext> implements 
-		Aggregator<AggregatorWriterTuplesList.AggregatorWriterTuplesListContext>	{
-		
-		private static class AggregatorWriterTuplesListContext	{
-			public NavigableMap<byte[], byte[]> keyValueMap = new TreeMap<byte[], byte[]>(Bytes.BYTES_COMPARATOR);
-			public String CF;
-			public String key;
-			
-			
-		};
-		
-		private Fields rowField;
-		private Fields columnField;
-		private Fields valueField;
-		private String cfName;
-		
-		public AggregatorWriterTuplesList(Fields declaredFields, String cfName, Fields rowField, Fields columnField, Fields valueField)	{
-			super(declaredFields);
-			
-			this.rowField = rowField;
-			this.columnField = columnField;
-			this.valueField = valueField;
-			this.cfName = cfName;
-		}
-
-		@Override
-        public void start(FlowProcess flowProcess,
-                AggregatorCall<AggregatorWriterTuplesList.AggregatorWriterTuplesListContext> aggregatorCall)
-        {
-			AggregatorWriterTuplesListContext aggregatorContext = new AggregatorWriterTuplesListContext();
-			aggregatorContext.CF = cfName;
-			aggregatorCall.setContext(aggregatorContext);
-			
-        }
-
-		@Override
-        public void aggregate(FlowProcess flowProcess,
-                AggregatorCall<AggregatorWriterTuplesList.AggregatorWriterTuplesListContext> aggregatorCall)
-        {
-	        String rowFieldStr = aggregatorCall.getArguments().getString(rowField);
-	        byte[] rowFieldBytes = Bytes.toBytes(rowFieldStr);
-	        String columnFieldStr = aggregatorCall.getArguments().getString(columnField);
-	        byte[] columnFieldBytes = Bytes.toBytes(columnFieldStr);
-	        String valueFieldStr = aggregatorCall.getArguments().getString(valueField);
-	        byte[] valueFieldBytes = Bytes.toBytes(valueFieldStr);
-	        
-	        aggregatorCall.getContext().key = rowFieldStr;
-	        aggregatorCall.getContext().keyValueMap.put(columnFieldBytes, valueFieldBytes);
-	        
-	        
-        }
-
-		@Override
-        public void complete(FlowProcess flowProcess,
-                AggregatorCall<AggregatorWriterTuplesList.AggregatorWriterTuplesListContext> aggregatorCall)
-        {
-			
-			NavigableMap<byte[], NavigableMap<byte[], byte[]>> cfMap = new TreeMap<byte[], NavigableMap<byte[], byte[]>>();
-			cfMap.put(Bytes.toBytes(aggregatorCall.getContext().CF), aggregatorCall.getContext().keyValueMap);
-			
-	        aggregatorCall.getOutputCollector().add(new Tuple(aggregatorCall.getContext().key, 
-	        		cfMap));
-	        
-        }
 		
 	}
 	
@@ -302,12 +192,15 @@ public class HBaseDynamicSchemeTests
 	}
 	
 	@Test
-	public void writeTest() throws IOException	{
+	public void writeTest() throws IOException, SecurityException, NoSuchMethodException	{
 		Tap source = new Lfs( new TextLine(new Fields("line")), inputDataFile );
 
 	    Pipe parsePipe = new Each( "insert", new RegexSplitter( new Fields( "num", "lower", "upper" ), " " ) );
+	    parsePipe = new Each(parsePipe, new Insert(new Fields("cf"), "cf"), Fields.ALL);
 	    parsePipe = new GroupBy(parsePipe, new Fields("num"));
-	    parsePipe = new Every( parsePipe, new AggregatorWriterTuplesList( new Fields("key", "value"), "cf", new Fields("num"), new Fields("lower"), new Fields("upper") ) ) ;
+	    //parsePipe = new Every( parsePipe, new AggregatorWriterTuplesList( new Fields("key", "value"), "cf", new Fields("num"), new Fields("lower"), new Fields("upper") ) ) ;
+	    parsePipe = new Every( parsePipe, new HBaseTuplesToMap<String, String, String>( new Fields("key", "value"), new Fields("cf"), new Fields("num"), 
+	    		new Fields("lower"), new Fields("upper"), String.class, String.class, String.class ) ) ;
 
 	    Tap hBaseTap = new HBaseTap( "multitable", new HBaseDynamicScheme( new Fields("key"), new Fields("value"), "cf" ), SinkMode.REPLACE );
 	    
@@ -315,8 +208,6 @@ public class HBaseDynamicSchemeTests
 
 	    parseFlow.complete();
 	    
-	    int count = 0;
-
 		TupleEntryIterator iterator = parseFlow.openSink();
 		assertTrue(isSameValue("1","cf","a","A",3,iterator.next()));
 		assertTrue(isSameValue("2","cf","b","B",3,iterator.next()));
