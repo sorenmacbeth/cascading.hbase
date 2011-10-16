@@ -41,223 +41,232 @@ import org.apache.hadoop.mapred.JobConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-
 /**
- * The HBaseTap class is a {@link Tap} subclass. It is used in conjunction with the {@HBaseFullScheme}
- * to allow for the reading and writing of data to and from a HBase cluster.
+ * The HBaseTap class is a {@link Tap} subclass. It is used in conjunction with
+ * the {@HBaseFullScheme} to allow for the reading and writing
+ * of data to and from a HBase cluster.
  */
 public class HBaseTap extends Tap {
-	/** Field LOG */
-	private static final Logger LOG = LoggerFactory.getLogger(HBaseTap.class);
+    /** Field LOG */
+    private static final Logger LOG = LoggerFactory.getLogger(HBaseTap.class);
 
-	/** Field SCHEME */
-	public static final String SCHEME = "hbase";
+    /** Field SCHEME */
+    public static final String SCHEME = "hbase";
 
-	/** Field hBaseAdmin */
-	private transient HBaseAdmin hBaseAdmin;
+    /** Field hBaseAdmin */
+    private transient HBaseAdmin hBaseAdmin;
 
-	private String tableName;
+    private String tableName;
 
-	/**
-	 * Constructor HBaseTap creates a new HBaseTap instance.
-	 *
-	 * @param tableName       of type String
-	 * @param HBaseFullScheme of type HBaseFullScheme
-	 */
-	public HBaseTap(String tableName, HBaseGenScheme HBaseFullScheme) {
-		super(HBaseFullScheme, SinkMode.APPEND);
-		this.tableName = tableName;
+    /**
+     * Constructor HBaseTap creates a new HBaseTap instance.
+     * 
+     * @param tableName
+     *            of type String
+     * @param HBaseFullScheme
+     *            of type HBaseFullScheme
+     */
+    public HBaseTap(String tableName, HBaseAbstractScheme HBaseFullScheme) {
+	super(HBaseFullScheme, SinkMode.APPEND);
+	this.tableName = tableName;
+    }
+
+    /**
+     * Constructor HBaseTap creates a new HBaseTap instance.
+     * 
+     * @param tableName
+     *            of type String
+     * @param HBaseFullScheme
+     *            of type HBaseFullScheme
+     * @param sinkMode
+     *            of type SinkMode
+     */
+    public HBaseTap(String tableName, HBaseAbstractScheme HBaseFullScheme,
+	    SinkMode sinkMode) {
+	super(HBaseFullScheme, sinkMode);
+	this.tableName = tableName;
+    }
+
+    private URI getURI() {
+	try {
+	    return new URI(SCHEME, tableName, null);
+	} catch (URISyntaxException exception) {
+	    throw new TapException("unable to create uri", exception);
 	}
+    }
 
-	/**
-	 * Constructor HBaseTap creates a new HBaseTap instance.
-	 *
-	 * @param tableName       of type String
-	 * @param HBaseFullScheme of type HBaseFullScheme
-	 * @param sinkMode        of type SinkMode
-	 */
-	public HBaseTap(String tableName, HBaseGenScheme HBaseFullScheme, SinkMode sinkMode) {
-		super(HBaseFullScheme, sinkMode);
-		this.tableName = tableName;
-	}
+    public Path getPath() {
+	return new Path(SCHEME + "://" + tableName);
+    }
 
-	private URI getURI() {
-		try {
-			return new URI(SCHEME, tableName, null);
-		} catch (URISyntaxException exception) {
-			throw new TapException("unable to create uri", exception);
-		}
-	}
+    public TupleEntryIterator openForRead(JobConf conf) throws IOException {
+	return new TupleEntryIterator(getSourceFields(), new TapIterator(this,
+		conf));
+    }
 
-	public Path getPath() {
-		return new Path(SCHEME + "://" + tableName);
-	}
+    public TupleEntryCollector openForWrite(JobConf conf) throws IOException {
+	return new TapCollector(this, conf);
+    }
 
-	public TupleEntryIterator openForRead(JobConf conf) throws IOException {
-		return new TupleEntryIterator(getSourceFields(), new TapIterator(this, conf));
-	}
+    private HBaseAdmin getHBaseAdmin() throws MasterNotRunningException,
+	    ZooKeeperConnectionException {
+	if (hBaseAdmin == null)
+	    hBaseAdmin = new HBaseAdmin(HBaseConfiguration.create());
 
-	public TupleEntryCollector openForWrite(JobConf conf) throws IOException {
-		return new TapCollector(this, conf);
-	}
+	return hBaseAdmin;
+    }
 
-	private HBaseAdmin getHBaseAdmin() throws MasterNotRunningException, ZooKeeperConnectionException {
-		if (hBaseAdmin == null)
-			hBaseAdmin = new HBaseAdmin(HBaseConfiguration.create());
+    public static HTable openTable(String tableName,
+	    String... coulmnFamilyArray) throws IOException {
+	Configuration config = HBaseConfiguration.create();
 
-		return hBaseAdmin;
-	}
-	
-	public static HTable openTable(String tableName, String... coulmnFamilyArray) throws IOException 
-	{
-		Configuration config = HBaseConfiguration.create();
+	HBaseAdmin hbase = new HBaseAdmin(config);
+	byte[] tableNameByte = tableName.getBytes();
 
-		HBaseAdmin hbase = new HBaseAdmin(config);
-		byte[] tableNameByte = tableName.getBytes();
+	if (hbase.tableExists(tableNameByte)) {
+	    // table exists
+	    LOG.debug("Table: " + tableName + " already exists!");
+	    if (hbase.isTableEnabled(tableNameByte)) {
+		// table enabled
 
-		if (hbase.tableExists(tableNameByte))
-		{
-			// table exists
-			LOG.debug("Table: " + tableName + " already exists!");
-			if (hbase.isTableEnabled(tableNameByte))
-			{
-				// table enabled
+		HTable hTable = new HTable(config, tableNameByte);
 
-				HTable hTable =  new HTable(config, tableNameByte);
-
-				HColumnDescriptor[]  hColumnDescriptorList = hTable.getTableDescriptor().getColumnFamilies();
-				List<String> existColumnNamesList = new ArrayList<String>();
-				for (HColumnDescriptor hColumnDescriptor : hColumnDescriptorList)
-				{
-					existColumnNamesList.add(hColumnDescriptor.getNameAsString());
-				}
-
-				// checking if all the column family are in the table, adding it if not.
-
-				List<String> missingColumnFamilies = new ArrayList<String>();
-				for (String coulmnFamily : coulmnFamilyArray)
-				{
-					if (!existColumnNamesList.contains(coulmnFamily))
-					{
-						LOG.warn(coulmnFamily + " does not exist in " + tableName);
-						missingColumnFamilies.add(coulmnFamily);
-					}
-				}
-
-				if (!missingColumnFamilies.isEmpty())
-				{
-					hbase.disableTable(tableNameByte);
-					for (String coulmnFamily : missingColumnFamilies)
-					{
-						hbase.addColumn(tableNameByte, new HColumnDescriptor(coulmnFamily.getBytes()));
-						LOG.info(coulmnFamily + " added to " + tableName);
-					}
-					hbase.enableTable(tableNameByte);
-				}
-
-				return hTable;
-			}
-
-			//table exists but disabled
-			LOG.info("Table: " + tableName + " exists but disabled, deleting the table.");
-			hbase.deleteTable(tableNameByte);
+		HColumnDescriptor[] hColumnDescriptorList = hTable
+			.getTableDescriptor().getColumnFamilies();
+		List<String> existColumnNamesList = new ArrayList<String>();
+		for (HColumnDescriptor hColumnDescriptor : hColumnDescriptorList) {
+		    existColumnNamesList.add(hColumnDescriptor
+			    .getNameAsString());
 		}
 
-		//creating a new table
-		HTableDescriptor hTableDescriptor = new HTableDescriptor(tableNameByte);
-		for (String coulmnFamily : coulmnFamilyArray)
-		{
-			HColumnDescriptor meta = new HColumnDescriptor(coulmnFamily.getBytes());
-			hTableDescriptor.addFamily(meta);
+		// checking if all the column family are in the table, adding it
+		// if not.
+
+		List<String> missingColumnFamilies = new ArrayList<String>();
+		for (String coulmnFamily : coulmnFamilyArray) {
+		    if (!existColumnNamesList.contains(coulmnFamily)) {
+			LOG.warn(coulmnFamily + " does not exist in "
+				+ tableName);
+			missingColumnFamilies.add(coulmnFamily);
+		    }
 		}
 
-		hbase.createTable(hTableDescriptor);
-		LOG.info("New hBase table created with name: " + tableName);
+		if (!missingColumnFamilies.isEmpty()) {
+		    hbase.disableTable(tableNameByte);
+		    for (String coulmnFamily : missingColumnFamilies) {
+			hbase.addColumn(tableNameByte, new HColumnDescriptor(
+				coulmnFamily.getBytes()));
+			LOG.info(coulmnFamily + " added to " + tableName);
+		    }
+		    hbase.enableTable(tableNameByte);
+		}
 
-		return new HTable(config, tableNameByte);
+		return hTable;
+	    }
 
+	    // table exists but disabled
+	    LOG.info("Table: " + tableName
+		    + " exists but disabled, deleting the table.");
+	    hbase.deleteTable(tableNameByte);
 	}
 
-	public boolean makeDirs(JobConf conf) throws IOException {
-		
-		openTable(tableName, ((HBaseGenScheme) getScheme()).getFamilyNames());
-		return true;
+	// creating a new table
+	HTableDescriptor hTableDescriptor = new HTableDescriptor(tableNameByte);
+	for (String coulmnFamily : coulmnFamilyArray) {
+	    HColumnDescriptor meta = new HColumnDescriptor(
+		    coulmnFamily.getBytes());
+	    hTableDescriptor.addFamily(meta);
 	}
 
-	public boolean deletePath(JobConf conf) throws IOException {
-		// eventually keep table meta-data to source table create
-		HBaseAdmin hBaseAdmin = getHBaseAdmin();
+	hbase.createTable(hTableDescriptor);
+	LOG.info("New hBase table created with name: " + tableName);
 
-		if (!hBaseAdmin.tableExists(tableName))
-			return true;
+	return new HTable(config, tableNameByte);
 
-		LOG.debug("deleting hbase table: {}", tableName);
+    }
 
-		hBaseAdmin.disableTable(tableName);
-		hBaseAdmin.deleteTable(tableName);
+    public boolean makeDirs(JobConf conf) throws IOException {
 
-		return true;
-	}
+	openTable(tableName,
+		((HBaseAbstractScheme) getScheme()).getFamilyNames());
+	return true;
+    }
 
-	public boolean pathExists(JobConf conf) throws IOException {
-		return getHBaseAdmin().tableExists(tableName);
-	}
+    public boolean deletePath(JobConf conf) throws IOException {
+	// eventually keep table meta-data to source table create
+	HBaseAdmin hBaseAdmin = getHBaseAdmin();
 
-	public long getPathModified(JobConf conf) throws IOException {
-		return System.currentTimeMillis(); // currently unable to find last mod time on a table
-	}
+	if (!hBaseAdmin.tableExists(tableName))
+	    return true;
 
-	@Override
-	public void sinkInit(JobConf conf) throws IOException {
-		LOG.debug("sinking to table: {}", tableName);
+	LOG.debug("deleting hbase table: {}", tableName);
 
-		// do not delete if initialized from within a task
-		if (isReplace() && conf.get("mapred.task.partition") == null)
-			deletePath(conf);
+	hBaseAdmin.disableTable(tableName);
+	hBaseAdmin.deleteTable(tableName);
 
-		makeDirs(conf);
+	return true;
+    }
 
-		conf.set(TableOutputFormat.OUTPUT_TABLE, tableName);
-		super.sinkInit(conf);
-	}
+    public boolean pathExists(JobConf conf) throws IOException {
+	return getHBaseAdmin().tableExists(tableName);
+    }
 
-	@Override
-	public void sourceInit(JobConf conf) throws IOException {
-		LOG.debug("sourcing from table: {}", tableName);
+    public long getPathModified(JobConf conf) throws IOException {
+	return System.currentTimeMillis(); // currently unable to find last mod
+					   // time on a table
+    }
 
-		FileInputFormat.addInputPaths(conf, tableName);
-		super.sourceInit(conf);
-	}
+    @Override
+    public void sinkInit(JobConf conf) throws IOException {
+	LOG.debug("sinking to table: {}", tableName);
 
-	@Override
-	public boolean equals(Object object) {
-		if (object == null)
-			return false;
-		if (this == object)
-			return true;
-		if (!(object instanceof HBaseTap))
-			return false;
-		if (!super.equals(object))
-			return false;
+	// do not delete if initialized from within a task
+	if (isReplace() && conf.get("mapred.task.partition") == null)
+	    deletePath(conf);
 
-		HBaseTap tap = (HBaseTap) object;
+	makeDirs(conf);
 
-		if (tableName == null ? tap.tableName != null : !tableName.equals(tap.tableName))
-			return false;
+	conf.set(TableOutputFormat.OUTPUT_TABLE, tableName);
+	super.sinkInit(conf);
+    }
 
-		return true;
-	}
+    @Override
+    public void sourceInit(JobConf conf) throws IOException {
+	LOG.debug("sourcing from table: {}", tableName);
 
-	@Override
-	public int hashCode() {
-		int result = super.hashCode();
-		result = 31 * result + (tableName == null ? 0 : tableName.hashCode());
-		return result;
-	}
+	FileInputFormat.addInputPaths(conf, tableName);
+	super.sourceInit(conf);
+    }
 
-	@Override
-	public String toString() {
-		return getPath().toString();
-	}
+    @Override
+    public boolean equals(Object object) {
+	if (object == null)
+	    return false;
+	if (this == object)
+	    return true;
+	if (!(object instanceof HBaseTap))
+	    return false;
+	if (!super.equals(object))
+	    return false;
+
+	HBaseTap tap = (HBaseTap) object;
+
+	if (tableName == null ? tap.tableName != null : !tableName
+		.equals(tap.tableName))
+	    return false;
+
+	return true;
+    }
+
+    @Override
+    public int hashCode() {
+	int result = super.hashCode();
+	result = 31 * result + (tableName == null ? 0 : tableName.hashCode());
+	return result;
+    }
+
+    @Override
+    public String toString() {
+	return getPath().toString();
+    }
 }

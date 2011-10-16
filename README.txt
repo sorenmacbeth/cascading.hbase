@@ -19,19 +19,10 @@ Welcome
 
 Building
 
- This release requires at least Cascading 1.0.1. Hadoop 0.19.x,
- and the related HBase release.
-
- To build a jar,
-
- > ant -Dcascading.home=... -Dhadoop.home=... -Dhbase.home=... jar
-
- To test,
-
- > ant -Dcascading.home=... -Dhadoop.home=... -Dhbase.home=... test
-
-where "..." is the install path of each of the dependencies.
-
+ This version could be built by using apache maven:
+ mvn package
+ 
+ Note that cloudera's maven repositories are used in order to resolve dependencies.
 
 Using
 
@@ -39,8 +30,8 @@ Using
   directory of your Hadoop application jar file along with all
   Cascading dependencies.
 
-  See the HBaseTest unit test for sample code on using the HBase taps and
-  schemes in your Cascading application.
+  See the TestHBaseDynamic and TestHBaseStatic unit tests for sample code on using the HBase taps,
+  schemes and helpers in your Cascading application.
 
 License
 
