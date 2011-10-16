@@ -10,7 +10,6 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
-import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +17,6 @@ import org.slf4j.LoggerFactory;
 /**
  * The Class HBaseUtils.
  */
-@Ignore
 public class HBaseUtils
 {
 
