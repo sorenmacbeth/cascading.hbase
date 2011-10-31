@@ -69,7 +69,7 @@ public class HBaseTap extends Tap {
      *            of type HBaseFullScheme
      */
     public HBaseTap(String tableName, HBaseAbstractScheme HBaseFullScheme) {
-	this(tableName, HBaseFullScheme, SinkMode.APPEND, false);
+	this(tableName, HBaseFullScheme, SinkMode.APPEND);
     }
     
     /**
@@ -81,6 +81,18 @@ public class HBaseTap extends Tap {
      */
     public HBaseTap(String tableName, HBaseAbstractScheme HBaseFullScheme, boolean isUsedAsBothSourceAndSink) {
 	this(tableName, HBaseFullScheme, SinkMode.APPEND, isUsedAsBothSourceAndSink);
+    }
+    
+    /**
+     * Instantiates a new h base tap.
+     *
+     * @param tableName the table name
+     * @param HBaseFullScheme the h base full scheme
+     * @param sinkMode the sink mode
+     */
+    public HBaseTap(String tableName, HBaseAbstractScheme HBaseFullScheme,
+	    SinkMode sinkMode) {
+	this(tableName, HBaseFullScheme, sinkMode, false);
     }
 
     /**
