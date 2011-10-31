@@ -263,9 +263,6 @@ public class HBaseTap extends Tap {
 
     @Override
     public boolean equals(Object object) {
-	// HACK - the tap could be used as source and as sink
-	if (isUsedAsBothSourceAndSink)
-	    return false;
 	
 	if (object == null)
 	    return false;
@@ -280,6 +277,10 @@ public class HBaseTap extends Tap {
 
 	if (tableName == null ? tap.tableName != null : !tableName
 		.equals(tap.tableName))
+	    return false;
+	
+	// HACK - the tap could be used as source and as sink
+	if (isUsedAsBothSourceAndSink)
 	    return false;
 
 	return true;
