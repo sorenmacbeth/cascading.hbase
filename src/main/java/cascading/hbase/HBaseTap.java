@@ -58,6 +58,8 @@ public class HBaseTap extends Tap {
 
     private String tableName;
 
+    private boolean isUsedAsBothSourceAndSink;
+
     /**
      * Constructor HBaseTap creates a new HBaseTap instance.
      * 
@@ -67,24 +69,33 @@ public class HBaseTap extends Tap {
      *            of type HBaseFullScheme
      */
     public HBaseTap(String tableName, HBaseAbstractScheme HBaseFullScheme) {
-	super(HBaseFullScheme, SinkMode.APPEND);
-	this.tableName = tableName;
+	this(tableName, HBaseFullScheme, SinkMode.APPEND, false);
+    }
+    
+    /**
+     * Instantiates a new h base tap.
+     *
+     * @param tableName the table name
+     * @param HBaseFullScheme the h base full scheme
+     * @param isUsedAsBothSourceAndSink the tap could be used as both source and sink
+     */
+    public HBaseTap(String tableName, HBaseAbstractScheme HBaseFullScheme, boolean isUsedAsBothSourceAndSink) {
+	this(tableName, HBaseFullScheme, SinkMode.APPEND, isUsedAsBothSourceAndSink);
     }
 
     /**
      * Constructor HBaseTap creates a new HBaseTap instance.
-     * 
-     * @param tableName
-     *            of type String
-     * @param HBaseFullScheme
-     *            of type HBaseFullScheme
-     * @param sinkMode
-     *            of type SinkMode
+     *
+     * @param tableName of type String
+     * @param HBaseFullScheme of type HBaseFullScheme
+     * @param sinkMode of type SinkMode
+     * @param isUsedAsBothSourceAndSink the tap could beused as both source and sink
      */
     public HBaseTap(String tableName, HBaseAbstractScheme HBaseFullScheme,
-	    SinkMode sinkMode) {
+	    SinkMode sinkMode, boolean isUsedAsBothSourceAndSink) {
 	super(HBaseFullScheme, sinkMode);
 	this.tableName = tableName;
+	this.isUsedAsBothSourceAndSink = isUsedAsBothSourceAndSink;
     }
 
     private URI getURI() {
@@ -240,6 +251,10 @@ public class HBaseTap extends Tap {
 
     @Override
     public boolean equals(Object object) {
+	// HACK - the tap could be used as source and as sink
+	if (isUsedAsBothSourceAndSink)
+	    return false;
+	
 	if (object == null)
 	    return false;
 	if (this == object)
