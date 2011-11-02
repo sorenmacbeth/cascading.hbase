@@ -58,7 +58,7 @@ public class HBaseTap extends Tap {
 
     private String tableName;
 
-    private boolean isUsedAsBothSourceAndSink;
+    private int uniqueId;
 
     /**
      * Constructor HBaseTap creates a new HBaseTap instance.
@@ -77,10 +77,10 @@ public class HBaseTap extends Tap {
      *
      * @param tableName the table name
      * @param HBaseFullScheme the h base full scheme
-     * @param isUsedAsBothSourceAndSink the tap could be used as both source and sink
+     * @param uniqueId	the uniqueId (0 if no id given)
      */
-    public HBaseTap(String tableName, HBaseAbstractScheme HBaseFullScheme, boolean isUsedAsBothSourceAndSink) {
-	this(tableName, HBaseFullScheme, SinkMode.APPEND, isUsedAsBothSourceAndSink);
+    public HBaseTap(String tableName, HBaseAbstractScheme HBaseFullScheme, int uniqueId) {
+	this(tableName, HBaseFullScheme, SinkMode.APPEND, uniqueId);
     }
     
     /**
@@ -92,7 +92,7 @@ public class HBaseTap extends Tap {
      */
     public HBaseTap(String tableName, HBaseAbstractScheme HBaseFullScheme,
 	    SinkMode sinkMode) {
-	this(tableName, HBaseFullScheme, sinkMode, false);
+	this(tableName, HBaseFullScheme, sinkMode, 0);
     }
 
     /**
@@ -101,13 +101,13 @@ public class HBaseTap extends Tap {
      * @param tableName of type String
      * @param HBaseFullScheme of type HBaseFullScheme
      * @param sinkMode of type SinkMode
-     * @param isUsedAsBothSourceAndSink the tap could beused as both source and sink
+     * @param uniqueId	the uniqueId (0 if no id given)
      */
     public HBaseTap(String tableName, HBaseAbstractScheme HBaseFullScheme,
-	    SinkMode sinkMode, boolean isUsedAsBothSourceAndSink) {
+	    SinkMode sinkMode, int uniqueId) {
 	super(HBaseFullScheme, sinkMode);
 	this.tableName = tableName;
-	this.isUsedAsBothSourceAndSink = isUsedAsBothSourceAndSink;
+	this.uniqueId = uniqueId;
     }
 
     private URI getURI() {
@@ -279,11 +279,7 @@ public class HBaseTap extends Tap {
 		.equals(tap.tableName))
 	    return false;
 	
-	// HACK - the tap could be used as source and as sink
-	if (isUsedAsBothSourceAndSink)
-	    return false;
-
-	return true;
+	return uniqueId == tap.uniqueId; 
     }
 
     @Override
