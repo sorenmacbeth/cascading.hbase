@@ -11,6 +11,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<repositories>
+
 		<repository>
 			<id>conjars.org</id>
 			<url>http://conjars.org/repo</url>
@@ -20,14 +21,10 @@
 			<name>Java.net Repository for Maven</name>
 			<url>http://download.java.net/maven/2/</url>
 		</repository>
-		<repository>
-			<id>cloudera-thrift</id>
-			<url>https://repository.cloudera.com/artifactory/temp-thrift-cache</url>
-		</repository>
-		<repository>
-			<id>cloudera-librel</id>
-			<url>https://repository.cloudera.com/artifactory/lib-release-local</url>
-		</repository>
+                <repository>
+                  <id>cloudera</id>
+                  <url>https://repository.cloudera.com/content/repositories/releases</url>
+                </repository>
 
 	</repositories>
 	<build>
@@ -70,28 +67,17 @@
 		<dependency>
 			<groupId>org.apache.hbase</groupId>
 			<artifactId>hbase</artifactId>
-			<version>0.90.3</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.hbase</groupId>
-		    <artifactId>hbase</artifactId>
-		    <version>0.90.3-cdh3u1</version>
-		    <classifier>tests</classifier>
+			<version>0.90.4-cdh3u2</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.thrift</groupId>
-		    <artifactId>thrift</artifactId>
-		    <version>0.2.0</version>
-		</dependency>
-		<dependency>
-		    <groupId>com.cloudera.hadoop</groupId>
-		    <artifactId>hadoop-test</artifactId>
-		    <version>0.20.2-737</version>
+		    <artifactId>libthrift</artifactId>
+		    <version>0.6.1</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.hadoop</groupId>
 		    <artifactId>hadoop-core</artifactId>
-		    <version>0.20.2-cdh3u1</version>
+		    <version>0.20.2-cdh3u2</version>
 		    <type>pom</type>
 		</dependency>
 		<dependency>
