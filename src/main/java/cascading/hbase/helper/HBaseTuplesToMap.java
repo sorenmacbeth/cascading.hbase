@@ -19,8 +19,8 @@ public class HBaseTuplesToMap extends
 	Aggregator<HBaseTuplesToMap.AggregatorWriterTuplesListContext> {
 
     static class AggregatorWriterTuplesListContext {
-	public NavigableMap<byte[], NavigableMap<byte[], byte[]>> keyValueMap = new TreeMap<byte[], NavigableMap<byte[], byte[]>>(
-		Bytes.BYTES_COMPARATOR);
+	public NavigableMap<byte[], NavigableMap<byte[], byte[]>> keyValueMap =
+		new TreeMap<byte[],NavigableMap<byte[],byte[]>>(Bytes.BYTES_COMPARATOR);
 
 	public String key;
 
