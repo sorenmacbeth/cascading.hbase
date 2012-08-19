@@ -138,10 +138,11 @@ public class HBaseDynamicScheme extends HBaseAbstractScheme {
 		for (Entry<byte[], NavigableMap<byte[], byte[]>> keyValue : values
 		.entrySet()) {
 			for (Entry<byte[], byte[]> value : keyValue.getValue().entrySet()) {
-				byte[] kv = check_null(keyValue.getKey());
-				byte[] vk = check_null(value.getKey());
-				byte[] v  = check_null(value.getValue());
-				put.add(kv, vk, v);
+				put.add(
+					check_null(keyValue.getKey()),
+					check_null(value.getKey()),
+					check_null(value.getValue())
+				);
 			}
 		}
 
