@@ -17,13 +17,15 @@ Welcome
 
    http://hadoop.apache.org/hbase/
 
+History
+
+ This version has roots from the original Cascading.HBase effort by Chris Wensel, and then modified by Kurt Harriger to add the dynamic scheme, putting tuple fields into HBase columns, and vice versa.  Twitter's Maple project also has roots from the original Cascading.HBase project, but is an update to Cascading 2.0.  Maple lacks the dynamic scheme, so this project basically combines everything before it and updates to Cascading 2.0.x and HBase 0.94.x.
+
 Building
 
  This version could be built by using apache maven:
  mvn package
  
- Note that cloudera's maven repositories are used in order to resolve dependencies.
-
 Using
 
   The cascading-hbase.jar file should be added to the "lib"
