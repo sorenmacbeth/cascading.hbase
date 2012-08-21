@@ -65,24 +65,6 @@ public class HBaseDynamicScheme extends HBaseAbstractScheme {
 	return familyNames;
     }
 
-    /**
-     * COPIED FROM HBASE SOURCE - NOT A BEST PRACTICE
-     *
-     * Writes the given scan into a Base64 encoded string.
-     *
-     * @param scan
-     *            The scan to write out.
-     * @return The scan saved in a Base64 encoded string.
-     * @throws IOException
-     *             When writing the scan fails.
-     */
-    /*
-     * private static String convertScanToString(Scan scan) throws IOException {
-     * ByteArrayOutputStream out = new ByteArrayOutputStream(); DataOutputStream
-     * dos = new DataOutputStream(out); scan.write(dos); return
-     * Base64.encodeBytes(out.toByteArray()); }
-     */
-
 	@Override
 	public void sourceConfInit (
 			FlowProcess<JobConf> flowProcess,
