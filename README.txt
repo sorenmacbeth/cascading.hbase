@@ -1,3 +1,7 @@
+WARNING
+ 
+ This fork is out of date in terms of cascading and hbase versions and no longer actively maintained.
+ There is an actively maintained hbase tap at http://github.com/Cascading/maple
 
 Welcome
 
