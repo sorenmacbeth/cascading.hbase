@@ -17,7 +17,7 @@
              {:dependencies
               [[junit/junit "4.9"]
                [junit-addons/junit-addons "1.4"]]
-              :java-source-paths ["src/test/java" "src/test"]
+              :java-source-paths ["src/test/java"]
               :resource-paths ["src/test/resources"]}}
-  :java-source-paths ["src/main/java" "src/java"]
+  :java-source-paths ["src/main/java"]
   :min-lein-version "2.0.0")
