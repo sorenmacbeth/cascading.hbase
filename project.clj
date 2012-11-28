@@ -10,12 +10,14 @@
                  [xerces/xercesImpl "2.9.1"]]
   :profiles {:provided
              {:dependencies
-              [[org.apache.hadoop/hadoop-core "0.20.2-dev"]
-               [org.apache.hbase/hbase "0.94.1"
+              [[org.apache.hadoop/hadoop-core "1.0.3"]
+               [org.apache.hbase/hbase "0.92.0"
                 :exclusions [org.apache.thrift/libthrift org.apache.hadoop/hadoop-core]]]}
              :dev
              {:dependencies
               [[junit/junit "4.9"]
-               [junit-addons/junit-addons "1.4"]]}}
-  :java-source-paths ["src/main/java"]
+               [junit-addons/junit-addons "1.4"]]
+              :java-source-paths ["src/test/java" "src/test"]
+              :resource-paths ["src/test/resources"]}}
+  :java-source-paths ["src/main/java" "src/java"]
   :min-lein-version "2.0.0")
