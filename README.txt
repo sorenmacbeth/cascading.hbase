@@ -1,8 +1,3 @@
-WARNING
- 
- This fork is out of date in terms of cascading and hbase versions and no longer actively maintained.
- There is an actively maintained hbase tap at http://github.com/Cascading/maple
-
 Welcome
 
  This is the Cascading.HBase module.
@@ -21,30 +16,23 @@ Welcome
 
    http://hadoop.apache.org/hbase/
 
+History
+
+ This version has roots from the original Cascading.HBase effort by Chris Wensel, and then modified by Kurt Harriger to add the dynamic scheme, putting tuple fields into HBase columns, and vice versa.  Twitter's Maple project also has roots from the original Cascading.HBase project, but is an update to Cascading 2.0.  Maple lacks the dynamic scheme, so this project basically combines everything before it and updates to Cascading 2.0.x and HBase 0.94.x.
+
 Building
 
- This release requires at least Cascading 1.0.1. Hadoop 0.20.x,
- and the related HBase release.
-
- To build a jar,
-
- > ant -Dcascading.home=... -Dhadoop.home=... -Dhbase.home=... jar
-
- To test,
-
- > ant -Dcascading.home=... -Dhadoop.home=... -Dhbase.home=... test
-
-where "..." is the install path of each of the dependencies.
-
-
+ This version could be built by using apache maven:
+ mvn package
+ 
 Using
 
   The cascading-hbase.jar file should be added to the "lib"
   directory of your Hadoop application jar file along with all
   Cascading dependencies.
 
-  See the HBaseTest unit test for sample code on using the HBase taps and
-  schemes in your Cascading application.
+  See the TestHBaseDynamic and TestHBaseStatic unit tests for sample code on using the HBase taps,
+  schemes and helpers in your Cascading application.
 
 License
 

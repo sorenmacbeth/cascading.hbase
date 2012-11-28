@@ -1,6 +1,11 @@
 .DS_Store
+.settings
 build
+bin
+target
 *.iml
 *.iws
 *.ipr
-build.properties
+.classpath
+.project
+repo@conjars.org
