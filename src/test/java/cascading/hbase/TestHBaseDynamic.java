@@ -8,12 +8,15 @@ import java.util.Arrays;
 import java.util.NavigableMap;
 import java.util.Properties;
 
+import cascading.flow.hadoop.HadoopFlowConnector;
+import cascading.hbase.helper.TableInputFormat;
 import junitx.framework.FileAssert;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Before;
 import org.junit.Test;
@@ -130,6 +133,36 @@ public class TestHBaseDynamic extends HBaseTests {
 				"build/test/hbasedynamicread/part-00000"));
 
 	}
+
+    @Test
+    public void testReadFiltered() throws SecurityException, NoSuchMethodException, IOException {
+        Properties properties = new Properties();
+        Scan s = new Scan();
+        s.setStartRow(Bytes.toBytes("row_1"));
+        s.setStopRow(Bytes.toBytes("row_1"));
+        properties.setProperty(TableInputFormat.SCAN, TableInputFormat.convertScanToString(s));
+        HadoopFlowConnector conn = new HadoopFlowConnector(properties);
+        Tap source = new HBaseTap(TEST_TABLE, new HBaseDynamicScheme(
+                new Fields("row"), new Fields("value"), TEST_CF));
+        Tap sink = new Lfs(new TextLine(new Fields("line")),
+                "build/test/hbasedynamicreadfiltered", SinkMode.REPLACE);
+
+        Pipe pipe = new Pipe("hbasedynamicschemepipe");
+
+        pipe = new Each(pipe, new Fields("row", "value"), new HBaseMapToTuples(
+                new Fields("row", "cf", "column", "value"), new Fields("row",
+                "value")));
+        pipe = new Each(pipe, new StringAppender(new Fields("line")));
+
+        Flow flow = conn.connect(source, sink, pipe);
+
+        flow.complete();
+
+        FileAssert.assertBinaryEquals(new File(
+                "src/test/resources/data/fileDynamicFilterExpected"), new File(
+                "build/test/hbasedynamicreadfiltered/part-00000"));
+
+    }
 
 	static private boolean isSameValue(String row, String cf, String column,
 			String value, int size, TupleEntry entry) {

@@ -27,6 +27,7 @@ import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.mapreduce.TableOutputFormat;
+import cascading.hbase.helper.TableInputFormat;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
@@ -263,6 +264,7 @@ public class HBaseTap extends Tap<JobConf, RecordReader, OutputCollector> {
 	public void sourceConfInit(FlowProcess<JobConf> flowProcess, JobConf conf) {
 		LOG.debug("sourcing from table: {}", tableName);
 		FileInputFormat.addInputPaths(conf, tableName);
+        conf.set(TableInputFormat.INPUT_TABLE, tableName);
 		super.sourceConfInit(flowProcess, conf);
 	}
 

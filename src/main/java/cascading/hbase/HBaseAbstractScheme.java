@@ -2,7 +2,7 @@ package cascading.hbase;
 
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.mapred.TableInputFormat;
+import cascading.hbase.helper.TableInputFormat;
 import org.apache.hadoop.hbase.mapred.TableOutputFormat;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapred.InputFormat;
@@ -39,7 +39,7 @@ public abstract class HBaseAbstractScheme extends
     protected void setSourceInitFields(JobConf conf, String columns) {
     	JobConf jobconf = (JobConf)conf;
     	jobconf.set("mapred.input.format.class", TableInputFormat.class.getName());
-    	jobconf.set(TableInputFormat.COLUMN_LIST, columns);
+        jobconf.set(TableInputFormat.SCAN_COLUMNS, columns);
     }
 
 	protected void setSinkInitFields(JobConf conf) {
