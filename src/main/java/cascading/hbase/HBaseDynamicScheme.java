@@ -8,6 +8,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.mapreduce.TableOutputFormat;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.DataOutputBuffer;
@@ -18,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cascading.flow.FlowProcess;
+import cascading.hbase.helper.TableInputFormat;
 import cascading.scheme.SinkCall;
 import cascading.scheme.SourceCall;
 import cascading.tap.Tap;
@@ -34,15 +36,30 @@ public class HBaseDynamicScheme extends HBaseAbstractScheme {
     private Fields valueField;
     private String[] familyNames;
 
-    public HBaseDynamicScheme(Fields keyField, Fields valueField,
+    private String scan  = null;
+   
+    public HBaseDynamicScheme(Fields keyField, Fields valueField, 
     		String... familyNames) {
+    	this(keyField, valueField, null, familyNames);
+    }
+    
+    public HBaseDynamicScheme(Fields keyField, Fields valueField, 
+    		Scan scan, String... familyNames) {
 		setSourceSink(keyField, valueField);
 
 		this.familyNames = familyNames;
 		this.keyField = keyField;
 		this.valueField = valueField;
-		this.familyNames = familyNames;
 
+		try {
+			// Scheme objects need to be Serializable. For convenience, 
+			// convert scan object to string in advance.
+			if(scan != null)
+				this.scan = TableInputFormat.convertScanToString(scan);
+		} catch (IOException e) {
+			throw new IllegalArgumentException("Cannot serialize scan");
+		}
+		
 		validate();
 
 		if (valueField.size() != 1) {
@@ -70,7 +87,11 @@ public class HBaseDynamicScheme extends HBaseAbstractScheme {
 			FlowProcess<JobConf> flowProcess,
 			Tap<JobConf, RecordReader, OutputCollector> tap,
 			JobConf conf) {
-		setSourceInitFields(conf, " ");
+		if(scan == null) {
+			setSourceInitFields(conf, " ");
+		} else {
+			setSourceInitScan(conf, scan);
+		}
 	}
 
 	@Override
