@@ -103,15 +103,15 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
-        <artifactId>hbase</artifactId>
-        <version>0.92.0</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.thrift</groupId>
-            <artifactId>libthrift</artifactId>
-          </exclusion>
-        </exclusions>
-        <scope>provided</scope>
+      <artifactId>hbase</artifactId>
+      <version>0.92.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.thrift</groupId>
+          <artifactId>libthrift</artifactId>
+        </exclusion>
+      </exclusions>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
