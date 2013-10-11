@@ -30,14 +30,4 @@
 			version is X.X.X-SNAPSHOT"
 		</description>
 	</property>
-	<property>
-		<name>hbase.zookeeper.quorum</name>
-		<value>localhost</value>
-		<description>test</description>
-	</property>
-	<property>
-		<name>hbase.zookeeper.property.clientPort</name>
-		<value>2181</value>
-		<description>test</description>
-	</property>
 </configuration>

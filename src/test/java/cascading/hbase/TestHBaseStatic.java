@@ -8,6 +8,7 @@ import org.junit.Test;
 import cascading.cascade.Cascade;
 import cascading.cascade.CascadeConnector;
 import cascading.flow.Flow;
+import cascading.flow.FlowConnector;
 import cascading.flow.FlowDef;
 import cascading.operation.Identity;
 import cascading.operation.expression.ExpressionFunction;
@@ -47,6 +48,7 @@ public class TestHBaseStatic extends HBaseTestsStaticScheme {
 		Tap hBaseTap = new HBaseTap("multitable", new HBaseScheme(keyFields,
 				familyNames, valueFields), SinkMode.REPLACE);
 
+		FlowConnector flowConnector = createHadoopFlowConnector();
 		Flow parseFlow = flowConnector.connect(source, hBaseTap, parsePipe);
 
 		parseFlow.complete();
@@ -90,6 +92,7 @@ public class TestHBaseStatic extends HBaseTestsStaticScheme {
 		Tap hBaseTap = new HBaseTap("multitable", new HBaseScheme(keyFields,
 				familyNames, valueFields));
 
+    FlowConnector flowConnector = createHadoopFlowConnector();
 		Flow parseFlow = flowConnector.connect(source, hBaseTap, parsePipe);
 
 		// create flow to read from hbase and save to local file

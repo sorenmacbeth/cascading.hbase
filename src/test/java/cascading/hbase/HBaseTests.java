@@ -1,19 +1,23 @@
 package cascading.hbase;
 
 import java.io.IOException;
-import java.util.Properties;
-
-import junit.framework.TestCase;
+import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HBaseTestingUtility;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
+import cascading.flow.FlowConnector;
 import cascading.flow.hadoop.HadoopFlowConnector;
 
+import com.google.common.collect.Maps;
+
 abstract public class HBaseTests {
+
 
 	// TODO: enable testing clusters and go back to port 21818
 
@@ -26,28 +30,14 @@ abstract public class HBaseTests {
 	/** The configuration. */
 	protected static Configuration configuration;
 
-	private static Properties properties = new Properties();
-	protected static HadoopFlowConnector flowConnector = new HadoopFlowConnector(properties);
+  private static HBaseTestingUtility utility;
 
-	@BeforeClass
-	public static void before() {
-		configuration = HBaseConfiguration.create();
-//		configuration.set("hbase.zookeeper.property.clientPort", "21818");
-	}
-
-//      throws IOException, InterruptedException
-//
-//		zooKeeperCluster = new MiniZooKeeperCluster(configuration);
-//		zooKeeperCluster.setDefaultClientPort(21818);
-//
-//		zooKeeperCluster.startup(new File("target/zookeepr"));
-//
-//		// start the mini cluster
-//		hbaseCluster = new LocalHBaseCluster(configuration, 1);
-//
-//		hbaseCluster.startup();
-//
-//	}
+  @BeforeClass
+  public static void setUpBeforeClass() throws Exception {
+    utility = new HBaseTestingUtility();
+    utility.startMiniCluster( 1 );
+    configuration = utility.getConfiguration();
+    }
 
 	protected static void deleteTable(Configuration configuration,
 			String tableName) throws IOException {
@@ -56,9 +46,26 @@ abstract public class HBaseTests {
 			hbase.disableTable(Bytes.toBytes(tableName));
 			hbase.deleteTable(Bytes.toBytes(tableName));
 		}
+		hbase.close();
 	}
+	
+  @AfterClass
+  public static void tearDownAfterClass() throws Exception {
+    utility.shutdownMiniCluster();
+  }
 
-//	@AfterClass
+  public FlowConnector createHadoopFlowConnector() {
+    return createHadoopFlowConnector( Maps.newHashMap() );
+  }
+  
+  public FlowConnector createHadoopFlowConnector(Map<Object, Object> props) {
+  
+  Map<Object, Object> finalProperties = Maps.newHashMap(props);
+  finalProperties.put( HConstants.ZOOKEEPER_CLIENT_PORT, utility.getZkCluster().getClientPort() );
+  return new HadoopFlowConnector(finalProperties);
+}
+  
+//	@AfterC
 //	public static void afterClass() throws IOException {
 //
 //		hbaseCluster.shutdown();
