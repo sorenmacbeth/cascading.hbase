@@ -138,7 +138,6 @@ public class HBaseScheme extends HBaseAbstractScheme {
 				result.add(cellValue);
 			}
 		}
-
 		sourceCall.getIncomingEntry().setTuple(result);
 
 		return true;
@@ -157,7 +156,6 @@ public class HBaseScheme extends HBaseAbstractScheme {
 			SinkCall<Object[], OutputCollector> sinkCall) throws IOException {
 
 		TupleEntry tupleEntry = sinkCall.getOutgoingEntry();
-
 		Put put = sinkGetPut(tupleEntry);
 
 		for (int i = 0; i < valueFields.length; i++) {

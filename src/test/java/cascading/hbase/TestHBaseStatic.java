@@ -1,14 +1,17 @@
 package cascading.hbase;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.apache.commons.io.FileUtils;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import cascading.cascade.Cascade;
 import cascading.cascade.CascadeConnector;
 import cascading.flow.Flow;
-import cascading.flow.FlowDef;
+import cascading.flow.FlowConnector;
 import cascading.operation.Identity;
 import cascading.operation.expression.ExpressionFunction;
 import cascading.operation.regex.RegexSplitter;
@@ -24,6 +27,14 @@ import cascading.tuple.Fields;
 @SuppressWarnings("rawtypes")
 public class TestHBaseStatic extends HBaseTestsStaticScheme {
 
+  String inputFile = "src/test/resources/data/small.txt";
+
+  @AfterClass
+  public static void tearDown() throws IOException
+    {
+    FileUtils.deleteDirectory( new File("target/test/output") );
+    }
+
 	@Test
 	public void testHBaseMultiFamily() throws IOException {
 
@@ -32,7 +43,7 @@ public class TestHBaseStatic extends HBaseTestsStaticScheme {
 
 		deleteTable(configuration, "multitable");
 
-		String inputFile = "src/test/resources/data/small.txt";
+		
 		// create flow to read from local file and insert into HBase
 		Tap source = new Lfs(new TextLine(), inputFile);
 
@@ -47,6 +58,7 @@ public class TestHBaseStatic extends HBaseTestsStaticScheme {
 		Tap hBaseTap = new HBaseTap("multitable", new HBaseScheme(keyFields,
 				familyNames, valueFields), SinkMode.REPLACE);
 
+		FlowConnector flowConnector = createHadoopFlowConnector();
 		Flow parseFlow = flowConnector.connect(source, hBaseTap, parsePipe);
 
 		parseFlow.complete();
@@ -54,7 +66,7 @@ public class TestHBaseStatic extends HBaseTestsStaticScheme {
 		verifySink(parseFlow, 5);
 
 		// create flow to read from hbase and save to local file
-		Tap sink = new Lfs(new TextLine(), "build/test/multifamily",
+		Tap sink = new Lfs(new TextLine(), "target/test/output/multifamily",
 				SinkMode.REPLACE);
 
 		Pipe copyPipe = new Each("read", new Identity());
@@ -82,22 +94,23 @@ public class TestHBaseStatic extends HBaseTestsStaticScheme {
 				new ExpressionFunction(new Fields("num"),
 						"(int) (Math.random() * Integer.MAX_VALUE)"),
 				Fields.ALL);
-
+		
 		Fields keyFields = new Fields("num");
 		String[] familyNames = { "left", "right" };
 		Fields[] valueFields = new Fields[] { new Fields("lower"),
 				new Fields("upper") };
 		Tap hBaseTap = new HBaseTap("multitable", new HBaseScheme(keyFields,
-				familyNames, valueFields));
+				familyNames, valueFields), SinkMode.UPDATE);
 
+    FlowConnector flowConnector = createHadoopFlowConnector();
 		Flow parseFlow = flowConnector.connect(source, hBaseTap, parsePipe);
 
 		// create flow to read from hbase and save to local file
-		Tap sink = new Lfs(new TextLine(), "build/test/multifamilycascade",
-				SinkMode.REPLACE);
+		Tap sink = new Lfs(new TextLine(), "target/test/output/multifamilycascade",
+				SinkMode.KEEP);
 
 		Pipe copyPipe = new Each("read", new Identity());
-
+		
 		Flow copyFlow = flowConnector.connect(hBaseTap, sink, copyPipe);
 
 		// reversed order intentionally

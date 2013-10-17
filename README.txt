@@ -24,7 +24,9 @@ Building
 
  This version could be built by using apache maven:
  mvn package
- 
+
+If the tests are failing on your machine, do a `umask 022` before running maven.
+
 Using
 
   The cascading-hbase.jar file should be added to the "lib"

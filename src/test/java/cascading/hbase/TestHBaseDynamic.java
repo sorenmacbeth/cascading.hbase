@@ -1,6 +1,6 @@
 package cascading.hbase;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,12 +8,9 @@ import java.util.Arrays;
 import java.util.NavigableMap;
 import java.util.Properties;
 
-import cascading.flow.hadoop.HadoopFlowConnector;
-import cascading.hbase.helper.TableInputFormat;
 import junitx.framework.FileAssert;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Scan;
@@ -24,10 +21,11 @@ import org.junit.runner.RunWith;
 import org.mortbay.log.Log;
 
 import cascading.flow.Flow;
+import cascading.flow.FlowConnector;
 import cascading.flow.FlowProcess;
-import cascading.flow.local.LocalFlowConnector;
 import cascading.hbase.helper.HBaseMapToTuples;
 import cascading.hbase.helper.HBaseTuplesToMap;
+import cascading.hbase.helper.TableInputFormat;
 import cascading.operation.BaseOperation;
 import cascading.operation.Function;
 import cascading.operation.FunctionCall;
@@ -59,7 +57,7 @@ public class TestHBaseDynamic extends HBaseTests {
 			throws IOException {
 		deleteTable(configuration, TEST_TABLE);
 
-		HTable table = HBaseUtils.openTable(TEST_TABLE, TEST_CF);
+		HTable table = HBaseUtils.openTable(configuration, TEST_TABLE, TEST_CF);
 
 		// HTable table =
 		// hBaseTestingUtility.createTable(Bytes.toBytes(TEST_TABLE),
@@ -124,7 +122,7 @@ public class TestHBaseDynamic extends HBaseTests {
 						"value")));
 		pipe = new Each(pipe, new StringAppender(new Fields("line")));
 
-		Flow flow = flowConnector.connect(source, sink, pipe);
+		Flow flow = createHadoopFlowConnector().connect(source, sink, pipe);
 
 		flow.complete();
 
@@ -141,7 +139,7 @@ public class TestHBaseDynamic extends HBaseTests {
         s.setStartRow(Bytes.toBytes("row_1"));
         s.setStopRow(Bytes.toBytes("row_1"));
         properties.setProperty(TableInputFormat.SCAN, TableInputFormat.convertScanToString(s));
-        HadoopFlowConnector conn = new HadoopFlowConnector(properties);
+        FlowConnector conn = createHadoopFlowConnector( properties );
         Tap source = new HBaseTap(TEST_TABLE, new HBaseDynamicScheme(
                 new Fields("row"), new Fields("value"), TEST_CF));
         Tap sink = new Lfs(new TextLine(new Fields("line")),
@@ -212,7 +210,7 @@ public class TestHBaseDynamic extends HBaseTests {
 		Tap hBaseTap = new HBaseTap("multitable", new HBaseDynamicScheme(
 				new Fields("key"), new Fields("value"), "cf"), SinkMode.REPLACE);
 
-		Flow parseFlow = flowConnector.connect(
+		Flow parseFlow = createHadoopFlowConnector().connect(
 				source, hBaseTap, parsePipe);
 
 		parseFlow.complete();

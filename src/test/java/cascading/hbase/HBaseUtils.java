@@ -34,9 +34,8 @@ public class HBaseUtils {
      * @return the htable
      * @throws IOException
      */
-    public static HTable openTable(String tableName,
+    public static HTable openTable(Configuration config, String tableName,
 	    String... coulmnFamilyArray) throws IOException {
-	Configuration config = HBaseConfiguration.create();
 
 	HBaseAdmin hbase = new HBaseAdmin(config);
 	byte[] tableNameByte = tableName.getBytes();
