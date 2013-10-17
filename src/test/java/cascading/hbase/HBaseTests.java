@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
@@ -17,15 +18,6 @@ import cascading.flow.hadoop.HadoopFlowConnector;
 import com.google.common.collect.Maps;
 
 abstract public class HBaseTests {
-
-
-	// TODO: enable testing clusters and go back to port 21818
-
-//	/** The hbase cluster. */
-//	protected static LocalHBaseCluster hbaseCluster;
-//
-//	/** The zoo keeper cluster. */
-//	protected static MiniZooKeeperCluster zooKeeperCluster;
 
 	/** The configuration. */
 	protected static Configuration configuration;
@@ -59,18 +51,9 @@ abstract public class HBaseTests {
   }
   
   public FlowConnector createHadoopFlowConnector(Map<Object, Object> props) {
-  
   Map<Object, Object> finalProperties = Maps.newHashMap(props);
   finalProperties.put( HConstants.ZOOKEEPER_CLIENT_PORT, utility.getZkCluster().getClientPort() );
   return new HadoopFlowConnector(finalProperties);
 }
-  
-//	@AfterC
-//	public static void afterClass() throws IOException {
-//
-//		hbaseCluster.shutdown();
-//		hbaseCluster.waitOnMaster(0);
-//		zooKeeperCluster.shutdown();
-//	}
 
 }

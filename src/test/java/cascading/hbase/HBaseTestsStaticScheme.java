@@ -1,7 +1,8 @@
 package cascading.hbase;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
-import java.util.Properties;
 
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
@@ -9,12 +10,10 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import cascading.flow.Flow;
-import cascading.flow.hadoop.HadoopFlowConnector;
 import cascading.tuple.TupleEntryIterator;
 
 public abstract class HBaseTestsStaticScheme extends HBaseTests {
 
-	// TODO: enable assertTrue funs again
 
 	protected void verifySink(Flow flow, int expects) throws IOException {
 		int count = 0;
@@ -28,8 +27,8 @@ public abstract class HBaseTestsStaticScheme extends HBaseTests {
 
 		iterator.close();
 
-//		assertTrue("wrong number of values in " + flow.getSink().toString(),
-//				expects == count);
+		assertEquals("wrong number of values in " + flow.getSink().toString(),
+				expects, count);
 	}
 
 	protected void verify(String tableName, String family, String charCol,
@@ -48,7 +47,8 @@ public abstract class HBaseTestsStaticScheme extends HBaseTests {
 		}
 
 		scanner.close();
+		table.close();
 
-//		assertTrue("wrong number of rows", expected == count);
+    assertEquals("wrong number of rows", expected, count);
 	}
 }
