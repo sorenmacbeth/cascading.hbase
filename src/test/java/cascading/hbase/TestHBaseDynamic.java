@@ -134,6 +134,34 @@ public class TestHBaseDynamic extends HBaseTests {
 
 	}
 
+	@Test
+	public void testReadFiltered2() throws SecurityException, NoSuchMethodException, IOException {
+		Properties properties = new Properties();
+        Scan s = new Scan();
+        s.setStartRow(Bytes.toBytes("row_1"));
+        s.setStopRow(Bytes.toBytes("row_1"));
+        HadoopFlowConnector conn = new HadoopFlowConnector(properties);
+        Tap source = new HBaseTap(TEST_TABLE, new HBaseDynamicScheme(
+                new Fields("row"), new Fields("value"), s, TEST_CF));
+        Tap sink = new Lfs(new TextLine(new Fields("line")),
+                "build/test/hbasedynamicreadfiltered2", SinkMode.REPLACE);
+
+        Pipe pipe = new Pipe("hbasedynamicschemepipe");
+
+        pipe = new Each(pipe, new Fields("row", "value"), new HBaseMapToTuples(
+                new Fields("row", "cf", "column", "value"), new Fields("row",
+                "value")));
+        pipe = new Each(pipe, new StringAppender(new Fields("line")));
+
+        Flow flow = conn.connect(source, sink, pipe);
+
+        flow.complete();
+
+        FileAssert.assertBinaryEquals(new File(
+                "src/test/resources/data/fileDynamicFilterExpected"), new File(
+                "build/test/hbasedynamicreadfiltered2/part-00000"));
+	}
+	
     @Test
     public void testReadFiltered() throws SecurityException, NoSuchMethodException, IOException {
         Properties properties = new Properties();

@@ -41,6 +41,11 @@ public abstract class HBaseAbstractScheme extends
     	jobconf.set("mapred.input.format.class", TableInputFormat.class.getName());
         jobconf.set(TableInputFormat.SCAN_COLUMNS, columns);
     }
+    
+    protected void setSourceInitScan(JobConf conf, String scan) {
+    	conf.set("mapred.input.format.class", TableInputFormat.class.getName());
+    	conf.set(TableInputFormat.SCAN, scan);
+    }
 
 	protected void setSinkInitFields(JobConf conf) {
     	conf.set("mapred.output.format.class", TableOutputFormat.class.getName());
